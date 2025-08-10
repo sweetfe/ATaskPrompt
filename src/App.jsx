@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import TaskList from './components/TaskList';
-import TaskPrompt from './components/TaskPrompt';
-import TaskSwipe from './components/TaskSwipe';
-import RewardAnimation from './components/RewardAnimation';
-import TrophyBoard from './components/TrophyBoard';
-import { loadTasks, saveTasks, loadTrophies, saveTrophies } from './utils/storage';
+import TaskList from './components/TaskList.jsx';
+import TaskPrompt from './components/TaskPrompt.jsx';
+import TaskSwipe from './components/TaskSwipe.jsx';
+import RewardAnimation from './components/RewardAnimation.jsx';
+import TrophyBoard from './components/TrophyBoard.jsx';
+import { loadTasks, saveTasks, loadTrophies, saveTrophies } from './utils/storage.js';
 
 function App() {
   const [tasks, setTasks] = useState([]);
