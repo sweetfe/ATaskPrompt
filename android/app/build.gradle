@@ -1,0 +1,94 @@
+// At the very top of your android/app/build.gradle
+apply plugin: 'com.android.application'
+
+android {
+    namespace "com.felice.taskcat" // YOUR NAMESPACE
+    compileSdk rootProject.ext.compileSdkVersion
+
+    defaultConfig {
+        applicationId "com.felice.taskcat" // YOUR APPLICATION ID
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 6 // YOUR VERSION CODE
+        versionName "6.0" // YOUR VERSION NAME
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+            ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+// --- START: Add Signing Config ---
+    signingConfigs {
+        release {
+            if (project.hasProperty('MYAPP_UPLOAD_STORE_FILE')) {
+                storeFile file(MYAPP_UPLOAD_STORE_FILE)
+                storePassword MYAPP_UPLOAD_STORE_PASSWORD
+                keyAlias MYAPP_UPLOAD_KEY_ALIAS
+                keyPassword MYAPP_UPLOAD_KEY_PASSWORD
+            }
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false // YOUR SETTING
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro' // YOUR SETTINGS
+            //  ADD THIS LINE:
+            signingConfig signingConfigs.release
+        }
+        // You can have a debug section here too if needed, e.g.:
+        // debug {
+        // }
+    }
+
+    // Add other android block configurations if you have them, like:
+    // compileOptions {
+    // sourceCompatibility JavaVersion.VERSION_1_8
+    // targetCompatibility JavaVersion.VERSION_1_8
+    // }
+    // packagingOptions {
+    // // Your packaging options
+    // }
+} // THIS IS THE CLOSING BRACE FOR THE 'android' BLOCK
+
+// This section is OUTSIDE the 'android' block
+repositories {
+    google()
+    mavenCentral()
+    flatDir {
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+} // THIS IS THE CLOSING BRACE FOR THE 'repositories' BLOCK
+
+// This section is OUTSIDE the 'android' and 'repositories' blocks
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+    implementation 'com.google.android.gms:play-services-auth:20.7.0'
+
+
+    // Import the Firebase BoM
+    implementation platform('com.google.firebase:firebase-bom:34.1.0') // YOUR BOM VERSION
+
+    // Add Firebase Auth (no version needed when using BoM)
+    implementation 'com.google.firebase:firebase-auth-ktx:23.0.0'
+
+    // ADD ANY OTHER DEPENDENCIES YOU HAD
+} // THIS IS THE CLOSING BRACE FOR THE 'dependencies' BLOCK
+
+// This should be near or at the end of the file
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch (Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}

@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">TaskCat</string>
+    <string name="title_activity_main">TaskCat</string>
+    <string name="package_name">com.felice.taskcat</string>
+    <string name="custom_url_scheme">com.felice.TaskCat-Android</string>
+    <string name="server_client_id">478905085127-3lhlk2jua1mgm57d8na3fpfnh77j9uq2.apps.googleusercontent.com</string>
+</resources>
