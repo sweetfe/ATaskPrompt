@@ -72,6 +72,9 @@ const TaskPrompt = ({ task, isVisible, onResponse }) => {
           {task.locationName && (
             <p className="task-location">Location: {task.locationName}</p>
           )}
+          {task.dueDate && (
+            <p className="task-due-date">Due: {new Date(task.dueDate).toLocaleDateString()}</p>
+          )}
         </div>
         <div className="popup-actions">
           <button className="accept-btn" onClick={handleAccept}>

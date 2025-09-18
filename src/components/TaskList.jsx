@@ -1,7 +1,7 @@
 import React, { useState, memo, useEffect } from 'react';
 import { CONFIG } from '../config.js';
 
-const TaskList = ({ tasks, onAddTask, onDeleteTask, onCompleteTask, onUpdateTask, overdueTasks, dueTodayTasks, onSetEditTask }) => {
+const TaskList = ({ tasks, onAddTask, onDeleteTask, onCompleteTask, onUpdateTask, overdueTasks, dueTodayTasks, taskToEdit, onContextCreated, customContexts = [], showTasks: controlledShowTasks, onShowTasksChange }) => {
   const [newTaskText, setNewTaskText] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('General');
   const [selectedContext, setSelectedContext] = useState('Home');
@@ -16,13 +16,18 @@ const TaskList = ({ tasks, onAddTask, onDeleteTask, onCompleteTask, onUpdateTask
   const [editingDueDate, setEditingDueDate] = useState('');
   const [editingPriority, setEditingPriority] = useState('normal');
   const [showTasks, setShowTasks] = useState(true);
+  
+  // Use controlled showTasks prop if provided, otherwise use local state
+  const isShowTasksControlled = controlledShowTasks !== undefined;
+  const actualShowTasks = isShowTasksControlled ? controlledShowTasks : showTasks;
+  const setShowTasksWrapper = isShowTasksControlled ? onShowTasksChange : setShowTasks;
 
   // Handle setting a task for editing from external sources (e.g., search results)
   useEffect(() => {
-    if (onSetEditTask) {
-      startEditing(onSetEditTask);
+    if (taskToEdit) {
+      startEditing(taskToEdit);
     }
-  }, [onSetEditTask]);
+  }, [taskToEdit]);
 
   // Check if a task is overdue
   const isTaskOverdue = (dueDate) => {
@@ -34,13 +39,17 @@ const TaskList = ({ tasks, onAddTask, onDeleteTask, onCompleteTask, onUpdateTask
     return due < today;
   };
 
-  const handleAddTask = (e) => {
+  const handleAddTask = async (e) => {
     e.preventDefault();
     if (newTaskText.trim() !== '') {
       // Handle adding a new context
       let contextToUse = selectedContext;
       if (showNewContextInput && newContext.trim() !== '') {
         contextToUse = newContext.trim();
+        // Notify parent component of new context creation
+        if (onContextCreated) {
+          await onContextCreated(contextToUse);
+        }
       }
       
       onAddTask(newTaskText, selectedCategory, contextToUse, dueDate || null, priority);
@@ -152,18 +161,18 @@ const TaskList = ({ tasks, onAddTask, onDeleteTask, onCompleteTask, onUpdateTask
   ];
 
   return (
-    <div className="task-list">
+    <div id="task-list" className="task-list">
       <div className="task-list-header">
         <h2>Things I Want to Do</h2>
         <button
           className="toggle-tasks-btn"
-          onClick={() => setShowTasks(!showTasks)}
+          onClick={() => setShowTasksWrapper(!actualShowTasks)}
         >
           {showTasks ? "Hide Pending Tasks" : "Show Pending Tasks"}
         </button>
       </div>
       
-      <form className="add-task-form" onSubmit={handleAddTask}>
+      <form className="add-task-form" onSubmit={(e) => handleAddTask(e)}>
         <input
           type="text"
           value={newTaskText}
@@ -198,6 +207,9 @@ const TaskList = ({ tasks, onAddTask, onDeleteTask, onCompleteTask, onUpdateTask
           {CONFIG.CONTEXTS.map(context => (
             <option key={context} value={context}>{context}</option>
           ))}
+          {customContexts.map(context => (
+            <option key={context} value={context}>{context}</option>
+          ))}
           <option value="AddNew">+ Add New Context</option>
         </select>
         {showNewContextInput && (
@@ -208,11 +220,14 @@ const TaskList = ({ tasks, onAddTask, onDeleteTask, onCompleteTask, onUpdateTask
             placeholder="Enter new context"
           />
         )}
-        <input
-          type="date"
-          value={dueDate}
-          onChange={(e) => setDueDate(e.target.value)}
-        />
+        <div className="date-input-container">
+          <input
+            type="date"
+            value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)}
+          />
+          <span className="calendar-icon">📅</span>
+        </div>
         <select
           value={priority}
           onChange={(e) => setPriority(e.target.value)}
@@ -223,7 +238,7 @@ const TaskList = ({ tasks, onAddTask, onDeleteTask, onCompleteTask, onUpdateTask
         </select>
         <button type="submit">Add</button>
       </form>
-      {showTasks && (
+      {actualShowTasks && (
         <div className="task-items mt-4">
           {tasks.filter(task => !task.completed).length === 0 ? (
             <p>No tasks yet. Add your first task above!</p>
@@ -263,6 +278,9 @@ const TaskList = ({ tasks, onAddTask, onDeleteTask, onCompleteTask, onUpdateTask
                         >
                           <option value="">Select Context</option>
                           {CONFIG.CONTEXTS.map(context => (
+                            <option key={context} value={context}>{context}</option>
+                          ))}
+                          {customContexts.map(context => (
                             <option key={context} value={context}>{context}</option>
                           ))}
                           <option value="AddNew">+ Add New Context</option>
@@ -311,7 +329,7 @@ const TaskList = ({ tasks, onAddTask, onDeleteTask, onCompleteTask, onUpdateTask
                       <span className="task-category">{task.category}</span>
                       <span className="task-text">{task.text}</span>
                       {task.context && (
-                        <span className="task-context">Context: {task.context}</span>
+                        <span className="task-context">{task.context}</span>
                       )}
                       {task.dueDate && (
                         <span className={`task-due-date ${isTaskOverdue(task.dueDate) ? 'overdue' : ''}`}>

@@ -36,7 +36,7 @@ const TrophyBoard = ({ trophies, newTrophy }) => {
             {todayTrophies.map(trophy => (
               <div
                 key={trophy.id}
-                className={`trophy-card ${newTrophy && newTrophy.id === trophy.id ? 'new' : ''} ${trophy.associatedTask ? 'clickable' : ''}`}
+                className={`trophy-card ${newTrophy && newTrophy.id === trophy.id ? 'new' : ''} ${trophy.associatedTask ? 'clickable' : ''} ${trophy.icon && trophy.icon.includes('bronze-trophy') ? 'bronze-trophy' : ''}`}
                 onClick={() => handleTrophyClick(trophy)}
               >
                 <div className="trophy-icon">
@@ -68,7 +68,7 @@ const TrophyBoard = ({ trophies, newTrophy }) => {
             {trophies.map(trophy => (
               <div
                 key={trophy.id}
-                className={`trophy-card ${newTrophy && newTrophy.id === trophy.id ? 'new' : ''} ${trophy.associatedTask ? 'clickable' : ''}`}
+                className={`trophy-card ${newTrophy && newTrophy.id === trophy.id ? 'new' : ''} ${trophy.associatedTask ? 'clickable' : ''} ${trophy.icon && trophy.icon.includes('bronze-trophy') ? 'bronze-trophy' : ''}`}
                 onClick={() => handleTrophyClick(trophy)}
               >
                 <div className="trophy-icon">
