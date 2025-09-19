@@ -69,9 +69,7 @@ const TaskPrompt = ({ task, isVisible, onResponse }) => {
         <div className="popup-content">
           {icon && <span className="task-icon">{icon.name}</span>}
           <p className="task-text">"{task.text}"</p>
-          {task.locationName && (
-            <p className="task-location">Location: {task.locationName}</p>
-          )}
+          
           {task.dueDate && (
             <p className="task-due-date">Due: {new Date(task.dueDate).toLocaleDateString()}</p>
           )}

@@ -1,7 +1,7 @@
 import React, { useState, memo, useEffect } from 'react';
 import { CONFIG } from '../config.js';
 
-const TaskList = ({ tasks, onAddTask, onDeleteTask, onCompleteTask, onUpdateTask, overdueTasks, dueTodayTasks, taskToEdit, onContextCreated, customContexts = [], showTasks: controlledShowTasks, onShowTasksChange }) => {
+const TaskList = ({ tasks, allPendingTasks, onAddTask, onDeleteTask, onCompleteTask, onUpdateTask, overdueTasks, dueTodayTasks, taskToEdit, onContextCreated, customContexts = [], showTasks: controlledShowTasks, onShowTasksChange }) => {
   const [newTaskText, setNewTaskText] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('General');
   const [selectedContext, setSelectedContext] = useState('Home');
@@ -101,43 +101,7 @@ const TaskList = ({ tasks, onAddTask, onDeleteTask, onCompleteTask, onUpdateTask
     setEditingPriority('normal');
   };
 
-  const handleDetectLocation = () => {
-    // Check if we're running on Android
-    const isAndroid = window.Capacitor?.isNativePlatform?.() &&
-                     window.Capacitor.getPlatform() === 'android';
-    
-    if (isAndroid) {
-      // For Android, we'll request permission through Capacitor
-      // This will be handled by the native Android code
-      console.log('Running on Android - location handled natively');
-      // We'll still try to get location through browser API as fallback
-    }
-    
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLocationCoords({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude
-          });
-          // Reverse geocode to get location name
-          // For now, we'll just use a placeholder
-          setLocationName('Current Location');
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          alert('Unable to get your location. Please try again or enter location manually.');
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 60000
-        }
-      );
-    } else {
-      alert('Geolocation is not supported by your browser.');
-    }
-  };
+  
 
   const categories = ['General', 'Health', 'Work', 'School', 'Learning', 'Home', 'Cleaning', 'Priority', 'Grocery', 'Self-Care / Wellness', 'Appointments / Social', 'Transportation / Errands', 'Cleaning / Maintenance', 'Hobbies / Creative Time', 'Tech / Digital', 'Financial / Budgeting'];
   
@@ -168,7 +132,7 @@ const TaskList = ({ tasks, onAddTask, onDeleteTask, onCompleteTask, onUpdateTask
           className="toggle-tasks-btn"
           onClick={() => setShowTasksWrapper(!actualShowTasks)}
         >
-          {showTasks ? "Hide Pending Tasks" : "Show Pending Tasks"}
+          {actualShowTasks ? "Hide Pending Tasks" : "Show Pending Tasks"}
         </button>
       </div>
       
@@ -240,8 +204,13 @@ const TaskList = ({ tasks, onAddTask, onDeleteTask, onCompleteTask, onUpdateTask
       </form>
       {actualShowTasks && (
         <div className="task-items mt-4">
-          {tasks.filter(task => !task.completed).length === 0 ? (
-            <p>No tasks yet. Add your first task above!</p>
+          {tasks.length === 0 ? (
+            // Check if there are pending tasks in other contexts
+            (allPendingTasks && allPendingTasks.length > 0) ? (
+              <p>No tasks in the current context. There are {allPendingTasks.length} pending tasks in other contexts.</p>
+            ) : (
+              <p>No tasks yet. Add your first task above!</p>
+            )
           ) : (
             tasks.filter(task => !task.completed).map(task => {
               // Find the icon for this task

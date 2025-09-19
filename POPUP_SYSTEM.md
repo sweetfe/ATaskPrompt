@@ -15,7 +15,7 @@ The popup system is a core feature of ATaskPrompt that replaces traditional noti
 - Consider user's current activity
 - Respect user's schedule and preferences
 - Adapt to user's completion patterns
-- Filter tasks based on user's current location
+
 - Show relevant icons based on task category
 
 ### Non-Intrusive
@@ -167,7 +167,7 @@ class PopupController {
            isWithinTimeRestrictions() && 
            hasAvailableTasks() &&
            isPastDueTime() &&
-           isLocationMatch();
+           
   }
   
   // Show appropriate popup
@@ -243,7 +243,7 @@ Users can control what types of prompts they receive:
 - **By Icon**: Only tasks with specific icons
 - **New Tasks**: Only tasks not yet prompted
 - **Pending Tasks**: Only incomplete tasks
-- **Location-Based Tasks**: Only tasks relevant to current location (if enabled)
+
 
 ## Technical Implementation
 
@@ -427,89 +427,3 @@ function adjustPopupFrequency() {
 - Weather-based recommendations
 - Icon-based task categorization
 
-### Location-Based Filtering
-
-The popup system can filter tasks based on the user's current location to show only relevant tasks.
-
-#### Location Detection
-
-```javascript
-// Get current location
-function getCurrentLocation() {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error('Geolocation is not supported by this browser'));
-      return;
-    }
-    
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        resolve({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude
-        });
-      },
-      (error) => {
-        reject(error);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000
-      }
-    );
-  });
-}
-```
-
-#### Location Matching
-
-```javascript
-// Check if task location matches current location
-function isLocationMatch(task, currentLocation) {
-  // If task has no location requirement, it's always a match
-  if (!task.locationCoords) {
-    return true;
-  }
-  
-  // If we don't have current location, we can't match
-  if (!currentLocation) {
-    return false;
-  }
-  
-  // Calculate distance between task location and current location
-  const distance = calculateDistance(
-    task.locationCoords.latitude,
-    task.locationCoords.longitude,
-    currentLocation.latitude,
-    currentLocation.longitude
-  );
-  
-  // Task is considered a match if within 100 meters
-  return distance <= 100;
-}
-
-// Calculate distance between two coordinates (Haversine formula)
-function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371e3; // Earth radius in meters
-  const φ1 = lat1 * Math.PI/180;
-  const φ2 = lat2 * Math.PI/180;
-  const Δφ = (lat2-lat1) * Math.PI/180;
-  const Δλ = (lon2-lon1) * Math.PI/180;
-  
-  const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-          Math.cos(φ1) * Math.cos(φ2) *
-          Math.sin(Δλ/2) * Math.sin(Δλ/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  
-  return R * c;
-}
-```
-
-#### User Controls
-
-Users can control location-based filtering:
-
-- **Enable/Disable**: Toggle location-based task filtering
-- **Location Update Frequency**: How often to update current location
-- **Distance Threshold**: How close to a location a task should be to match

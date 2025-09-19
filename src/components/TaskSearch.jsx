@@ -5,6 +5,12 @@ const TaskSearch = ({ tasks, pendingTasks, onEditTask }) => {
   const [searchType, setSearchType] = useState('all'); // 'all', 'completed', 'pending'
   const [searchResults, setSearchResults] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
+  const [editingTaskId, setEditingTaskId] = useState(null);
+  const [editingTaskText, setEditingTaskText] = useState('');
+  const [editingCategory, setEditingCategory] = useState('');
+  const [editingContext, setEditingContext] = useState('');
+  const [editingDueDate, setEditingDueDate] = useState('');
+  const [editingPriority, setEditingPriority] = useState('normal');
 
   const handleSearch = () => {
     // Use pendingTasks for better performance when searching pending tasks
@@ -37,6 +43,42 @@ const TaskSearch = ({ tasks, pendingTasks, onEditTask }) => {
   const viewTaskDetails = (task) => {
     setSelectedTask(task);
     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  };
+
+  const startEditing = (task) => {
+    setEditingTaskId(task.id);
+    setEditingTaskText(task.text);
+    setEditingCategory(task.category || 'General');
+    setEditingContext(task.context || 'Home');
+    setEditingDueDate(task.dueDate || '');
+    setEditingPriority(task.priority || 'normal');
+  };
+
+  const saveEditing = (id) => {
+    // Call the onEditTask function with the updated task data
+    const updatedTask = searchResults.find(task => task.id === id);
+    if (updatedTask) {
+      const taskWithUpdates = {
+        ...updatedTask,
+        text: editingTaskText,
+        category: editingCategory,
+        context: editingContext,
+        dueDate: editingDueDate || null,
+        priority: editingPriority
+      };
+      
+      // Call the parent's onEditTask function to handle the actual update
+      if (onEditTask) {
+        onEditTask(taskWithUpdates);
+      }
+    }
+    
+    // Exit editing mode
+    setEditingTaskId(null);
+  };
+
+  const cancelEditing = () => {
+    setEditingTaskId(null);
   };
 
   return (
@@ -113,33 +155,104 @@ const TaskSearch = ({ tasks, pendingTasks, onEditTask }) => {
             ];
             const icon = icons.find(i => i.id === task.icon);
             
+            const isEditing = editingTaskId === task.id;
+            
+            // Define categories and icons (same as in TaskList)
+            const categories = ['General', 'Health', 'Work', 'School', 'Learning', 'Home', 'Cleaning', 'Priority', 'Grocery', 'Self-Care / Wellness', 'Appointments / Social', 'Transportation / Errands', 'Cleaning / Maintenance', 'Hobbies / Creative Time', 'Tech / Digital', 'Financial / Budgeting'];
+            
             return (
               <div key={task.id} className="task-item">
-                <div className="task-content" onClick={() => viewTaskDetails(task)}>
-                  {icon && <span className="task-icon">{icon.name}</span>}
-                  <span className="task-category">{task.category}</span>
-                  <span className="task-text">{task.text}</span>
-                  {task.context && (
-                    <span className="task-context">Context: {task.context}</span>
-                  )}
-                  {task.dueDate && (
-                    <span className={`task-due-date ${new Date(task.dueDate) < new Date() ? 'overdue' : ''}`}>
-                      Due: {new Date(task.dueDate).toLocaleDateString()}
-                    </span>
-                  )}
-                  {task.priority && task.priority !== 'normal' && (
-                    <span className={`task-priority priority-${task.priority}`}>
-                      {task.priority === 'high' ? '🔴 High' : '🟡 Low'}
-                    </span>
-                  )}
-                </div>
-                {!task.completed && (
+                {isEditing ? (
+                  // Edit mode
+                  <div className="task-edit-form">
+                    <div className="task-content">
+                      {icon && <span className="task-icon">{icon.name}</span>}
+                      <select
+                        value={editingCategory}
+                        onChange={(e) => setEditingCategory(e.target.value)}
+                        className="edit-category-select"
+                      >
+                        {categories.map(category => {
+                          const categoryIcon = icons.find(i => i.category === category);
+                          return (
+                            <option key={category} value={category}>
+                              {categoryIcon ? `${categoryIcon.name} ${category}` : category}
+                            </option>
+                          );
+                        })}
+                      </select>
+                      <input
+                        type="text"
+                        value={editingTaskText}
+                        onChange={(e) => setEditingTaskText(e.target.value)}
+                        className="edit-task-input"
+                      />
+                      <input
+                        type="text"
+                        value={editingContext}
+                        onChange={(e) => setEditingContext(e.target.value)}
+                        className="edit-context-input"
+                        placeholder="Context"
+                      />
+                      <input
+                        type="date"
+                        value={editingDueDate}
+                        onChange={(e) => setEditingDueDate(e.target.value)}
+                        className="edit-due-date-input"
+                      />
+                      <select
+                        value={editingPriority}
+                        onChange={(e) => setEditingPriority(e.target.value)}
+                        className="edit-priority-select"
+                      >
+                        <option value="low">Low Priority</option>
+                        <option value="normal">Normal Priority</option>
+                        <option value="high">High Priority</option>
+                      </select>
+                    </div>
+                    <div className="task-actions">
+                      <button
+                        className="save-btn"
+                        onClick={() => saveEditing(task.id)}
+                      >
+                        Save
+                      </button>
+                      <button
+                        className="cancel-btn"
+                        onClick={cancelEditing}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  // View mode
+                  <div className="task-content" onClick={() => viewTaskDetails(task)}>
+                    {icon && <span className="task-icon">{icon.name}</span>}
+                    <span className="task-category">{task.category}</span>
+                    <span className="task-text">{task.text}</span>
+                    {task.context && (
+                      <span className="task-context">{task.context}</span>
+                    )}
+                    {task.dueDate && (
+                      <span className={`task-due-date ${new Date(task.dueDate) < new Date() ? 'overdue' : ''}`}>
+                        Due: {new Date(task.dueDate).toLocaleDateString()}
+                      </span>
+                    )}
+                    {task.priority && task.priority !== 'normal' && (
+                      <span className={`task-priority priority-${task.priority}`}>
+                        {task.priority === 'high' ? '🔴 High' : '🟡 Low'}
+                      </span>
+                    )}
+                  </div>
+                )}
+                {!task.completed && !isEditing && (
                   <div className="task-actions">
                     <button
                       className="edit-btn"
                       onClick={(e) => {
                         e.stopPropagation();
-                        onEditTask && onEditTask(task);
+                        startEditing(task);
                       }}
                     >
                       Edit

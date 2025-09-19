@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { auth, signInWithGoogle, signOutUser, initializeSocialLogin } from '../utils/firebase';
+import { auth, signInWithGoogle, signOutUser, initializeSocialLogin, handleAuthRedirect } from '../utils/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
 // Create the AuthContext
@@ -36,12 +36,23 @@ export const AuthProvider = ({ children }) => {
     initializeSocial();
   }, []);
 
-  // Listen for auth state changes
+  // Listen for auth state changes and handle redirects
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
       setLoading(false);
     });
+
+    // Handle redirect result on app load
+    const checkRedirectResult = async () => {
+      try {
+        await handleAuthRedirect();
+      } catch (error) {
+        console.error('Failed to handle auth redirect:', error);
+      }
+    };
+
+    checkRedirectResult();
 
     // Cleanup subscription on unmount
     return unsubscribe;

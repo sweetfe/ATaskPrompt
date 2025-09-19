@@ -35,14 +35,7 @@ The Task model represents a single task in the system.
   // How many times the task has been completed
   completionCount: number,
   
-  // Location name where the task should be performed (optional)
-  locationName: string | null,
   
-  // Location coordinates where the task should be performed (optional)
-  locationCoords: {
-    latitude: number,
-    longitude: number
-  } | null,
   
   // Icon identifier for display (optional)
   icon: string | null
@@ -90,8 +83,7 @@ The Trophy model represents achievements earned by the user.
     // When the task was completed
     completedAt: Date,
     
-    // Location name where the task was performed (optional)
-    locationName: string | null,
+    
     
     // How many times the task has been prompted
     promptCount: number,
@@ -252,8 +244,8 @@ completed_at: timestamp (nullable)
 prompted: boolean
 prompt_count: integer
 completion_count: integer
-location_name: string (nullable)
-location_coords: json (nullable)  // {latitude: number, longitude: number}
+
+
 icon: string (nullable)
 ```
 

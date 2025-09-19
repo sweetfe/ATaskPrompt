@@ -4,18 +4,18 @@ import { useMemo } from 'react';
 export const useTaskUtils = (tasks, trophies) => {
   // Memoize pending tasks calculation
   const pendingTasks = useMemo(() => {
-    return tasks.filter(task => !task.completed);
+    return (tasks || []).filter(task => !task.completed);
   }, [tasks]);
 
   // Memoize completed tasks calculation
   const completedTasks = useMemo(() => {
-    return tasks.filter(task => task.completed);
+    return (tasks || []).filter(task => task.completed);
   }, [tasks]);
 
   // Memoize grouped trophies by date
   const groupedTrophiesByDate = useMemo(() => {
     const grouped = {};
-    trophies.forEach(trophy => {
+    (trophies || []).forEach(trophy => {
       const date = new Date(trophy.earnedAt).toDateString();
       if (!grouped[date]) {
         grouped[date] = [];

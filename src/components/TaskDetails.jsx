@@ -18,9 +18,7 @@ const TaskDetails = ({ task, onClose }) => {
             {task.completedAt && (
               <p><strong>Completed:</strong> {new Date(task.completedAt).toLocaleString()}</p>
             )}
-            {task.locationName && (
-              <p><strong>Location:</strong> {task.locationName}</p>
-            )}
+            
             <p><strong>Prompted:</strong> {task.prompted ? 'Yes' : 'No'}</p>
             <p><strong>Prompt Count:</strong> {task.promptCount}</p>
             <p><strong>Completion Count:</strong> {task.completionCount}</p>

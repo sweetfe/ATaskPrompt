@@ -7,14 +7,14 @@ A task management application with gamification elements, built with React and C
 ## 📱 Features
 
 * **Task Management**: Create, view, and complete tasks with categories, contexts, due dates, and priorities
-* **Context/Mode System**: Organize tasks by contexts/modes instead of geolocation
+* **Context/Mode System**: Organize tasks by contexts/modes
 * **Swipe Navigation**: Intuitive swipe gestures to navigate between tasks
 * **Gamification**: Earn trophies and celebrate achievements as you complete tasks
 * **Reward System**: Confetti animations and visual feedback for completed tasks with multilingual messages
 * **Persistent Storage**: Tasks and trophies saved in Firebase with offline support
 * **Android Notifications**: Native notification support for priority and date-specific tasks
 * **Bill Payment Reminders**: Specialized alerts for financial tasks
-* **Search & Edit**: Find and edit tasks directly from search results
+* **Search & Edit**: Find and edit tasks directly from search results with inline editing
 * **Cross-Platform**: Works on both web browsers and Android devices
 
 ## 🚀 Getting Started
@@ -93,14 +93,16 @@ npx cap open android
 4. **Complete Tasks**: Click "Complete Task" to mark tasks as done
 5. **Earn Rewards**: Watch confetti animations and earn trophies for completed tasks
 6. **Track Progress**: View your trophy collection and task history
-7. **Search Tasks**: Find specific tasks and edit them directly from search results
+7. **Search Tasks**: Find specific tasks and edit them directly in the search results with inline editing
 
 ## 🏆 Trophy System
 
-* **Silver Trophies**: First 10 completed tasks
-* **Bronze Trophies**: Tasks 11-20
-* **Gold Trophies**: Task 21 and beyond
+* **Silver Trophies**: First 10 completed tasks in a 24-hour period
+* **Bronze Trophies**: Tasks 11-20 in a 24-hour period
+* **Gold Trophies**: Task 21 and beyond in a 24-hour period
 * **Special Trophies**: Earned for completing tasks in 5 different categories
+
+**Note**: Trophy progression resets every 24 hours, so completing 20 tasks over 2 days should award 20 silver trophies (10 per day) rather than a mix of silver and bronze.
 
 ## 📁 Project Structure
 
@@ -153,6 +155,31 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 * Confetti animations by canvas-confetti
 * Swipe gestures handled by react-swipeable
 * Native notifications powered by Capacitor Local Notifications
+
+## 📝 Known Issues
+
+### Current Bugs & Tweaks Needed
+
+#### UI/Visual Issues
+- **App Icon**: Top-of-screen icon needs to match Android icon (checkmark + cat, not just cat)
+- **Add Context Button**: Only accepts "+Context" instead of custom contexts (e.g., "Home Depot")
+- **Random Task Context Button**: Context button next to "Show Random Task" appears non-functional
+
+#### Task Management Issues
+- **Edit from Search**: Tasks found via "Search Tasks" can now be edited directly in search results
+- **Pending Task Editing**: Fixed editing of pending tasks with inline editing interface
+
+#### Trophy/Reward System Issues
+- **Bronze Trophy Bug**: Issue with bronze trophy awarding mechanism
+- **Trophy Timing Logic**: Trophies not following 24-hour period reset rules correctly
+- **Expected Behavior**: Trophy types should reset every 24 hours (10 silver, then 10 bronze, then gold)
+
+#### Working Features ✓
+- Random trophy congratulations system
+- Core task management (add/complete/delete)
+- Swipe navigation between tasks
+- Basic reward animations
+- Inline task editing in search results
 
 ## ⚠️ Platform Support
 

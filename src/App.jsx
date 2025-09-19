@@ -15,7 +15,9 @@
    updateTask as firestoreUpdateTask,
    deleteTask as firestoreDeleteTask,
    loadTrophies,
-   addTrophy
+   addTrophy,
+   loadSettings,
+   saveSettings
  } from './utils/storage.js';
  import { useAuth } from './contexts/AuthContext.jsx';
  import { initializeOfflineStorage, isOnline, loadTasksLocally, loadTrophiesLocally } from './utils/offlineStorage.js';
@@ -37,6 +39,8 @@
    const [isLoading, setIsLoading] = useState(false);
    const [currentContext, setCurrentContext] = useState('All');
    const [taskToEdit, setTaskToEdit] = useState(null);
+   const [customContexts, setCustomContexts] = useState([]);
+   const [showTasks, setShowTasks] = useState(true);
 
    // Initialize offline storage
    useEffect(() => {
@@ -81,12 +85,20 @@
        setTrophies(loadedTrophies);
      });
 
+     // Load settings including custom contexts
+     const unsubscribeSettings = loadSettings((settings) => {
+       if (settings && settings.customContexts) {
+         setCustomContexts(settings.customContexts);
+       }
+     });
+
      setDataLoaded(true);
 
      return () => {
        console.log('🛑 Stopping Firestore listeners');
        unsubscribeTasks();
        unsubscribeTrophies();
+       if (unsubscribeSettings) unsubscribeSettings();
      };
    }, [currentUser]);
 
@@ -216,41 +228,11 @@
      }
    };
 
-   // Calculate distance between two coordinates (Haversine formula)
-   const calculateDistance = (lat1, lon1, lat2, lon2) => {
-     const R = 6371e3;
-     const φ1 = lat1 * Math.PI/180;
-     const φ2 = lat2 * Math.PI/180;
-     const Δφ = (lat2-lat1) * Math.PI/180;
-     const Δλ = (lon2-lon1) * Math.PI/180;
-
-     const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-             Math.cos(φ1) * Math.cos(φ2) *
-             Math.sin(Δλ/2) * Math.sin(Δλ/2);
-     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
-     return R * c;
-   };
-
-   // Check if task location matches current location
-   const isLocationMatch = (task, currentLocation) => {
-     if (!task.locationCoords) return true;
-     if (!currentLocation) return true;
-
-     const distance = calculateDistance(
-       task.locationCoords.latitude,
-       task.locationCoords.longitude,
-       currentLocation.latitude,
-       currentLocation.longitude
-     );
-
-     return distance <= 100;
-   };
 
    
       // Show a random task prompt
       const showRandomPrompt = () => {
-        const availableTasks = tasks.filter(task => {
+        const availableTasks = (tasks || []).filter(task => {
           // Filter by completion status
           const isNotCompleted = !task.completed;
           
@@ -285,7 +267,14 @@
    // Check for new trophies
    const checkForTrophies = (updatedTasks) => {
      const completedTasks = updatedTasks.filter(t => t.completed);
-     const completedCount = completedTasks.length;
+     
+     // Get tasks completed in the last 24 hours
+     const now = new Date();
+     const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+     const todayCompletedTasks = completedTasks.filter(task => 
+       new Date(task.completedAt) >= twentyFourHoursAgo
+     );
+     const todayCompletedCount = todayCompletedTasks.length;
 
      const mostRecentTask = completedTasks.length > 0
        ? completedTasks.reduce((latest, task) =>
@@ -293,26 +282,34 @@
          )
        : null;
 
+     // Only award trophy if we just completed a task (mostRecentTask should be within last minute)
+     if (!mostRecentTask || new Date(mostRecentTask.completedAt) < new Date(now.getTime() - 60000)) {
+       return;
+     }
+
      let trophyIcon = '';
      let trophyName = '';
      let trophyDescription = '';
 
-     if (completedCount <= 10) {
+     // Award trophies based on tasks completed in 24-hour period
+     if (todayCompletedCount <= 10) {
        trophyIcon = '/trophy_art/silver-trophy-ChatGPT.png';
-       trophyName = `Silver Trophy #${completedCount}`;
-       trophyDescription = `Completed task #${completedCount}`;
-     } else if (completedCount <= 20) {
+       trophyName = `Silver Trophy #${todayCompletedCount}`;
+       trophyDescription = `Completed ${todayCompletedCount} task${todayCompletedCount > 1 ? 's' : ''} in 24 hours`;
+     } else if (todayCompletedCount <= 20) {
        trophyIcon = '/trophy_art/bronze-trophy-ChatGPT.png';
-       trophyName = `Bronze Trophy #${completedCount - 10}`;
-       trophyDescription = `Completed task #${completedCount}`;
+       trophyName = `Bronze Trophy #${todayCompletedCount - 10}`;
+       trophyDescription = `Completed ${todayCompletedCount} tasks in 24 hours`;
      } else {
        trophyIcon = '🏆';
-       trophyName = `Gold Trophy #${completedCount - 20}`;
-       trophyDescription = `Completed task #${completedCount}`;
+       trophyName = `Gold Trophy #${todayCompletedCount - 20}`;
+       trophyDescription = `Completed ${todayCompletedCount} tasks in 24 hours`;
      }
 
+     // Create unique trophy ID based on date and count
+     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
      const newTrophy = {
-       id: `task-${completedCount}`,
+       id: `${today}-task-${todayCompletedCount}`,
        name: trophyName,
        description: trophyDescription,
        earnedAt: new Date(),
@@ -323,7 +320,7 @@
          category: mostRecentTask.category,
          createdAt: mostRecentTask.createdAt,
          completedAt: mostRecentTask.completedAt,
-         locationName: mostRecentTask.locationName,
+         
          promptCount: mostRecentTask.promptCount,
          completionCount: mostRecentTask.completionCount
        } : null
@@ -337,7 +334,7 @@
      if (!varietySeekerTrophy) {
        const categories = [...new Set(completedTasks.map(t => t.category))];
        if (categories.length >= 5) {
-         const newTrophy = {
+         const varietyTrophy = {
            id: 'variety-seeker',
            name: 'Variety Seeker',
            description: 'Complete tasks from 5 different categories',
@@ -349,13 +346,19 @@
              category: mostRecentTask.category,
              createdAt: mostRecentTask.createdAt,
              completedAt: mostRecentTask.completedAt,
-             locationName: mostRecentTask.locationName,
+             
              promptCount: mostRecentTask.promptCount,
              completionCount: mostRecentTask.completionCount
            } : null
          };
-         setTrophies(prev => [...prev, newTrophy]);
-         setNewTrophy(newTrophy);
+         setTrophies(prev => [...prev, varietyTrophy]);
+         setNewTrophy(varietyTrophy);
+         // Also save the variety trophy
+         try {
+           addTrophy(varietyTrophy);
+         } catch (error) {
+           console.error('Failed to save variety trophy to Firestore:', error);
+         }
        }
      }
 
@@ -398,6 +401,20 @@
      }
    };
 
+   // Handle new context creation
+   const handleContextCreated = async (newContext) => {
+     if (!customContexts.includes(newContext) && !CONFIG.CONTEXTS.includes(newContext)) {
+       const updatedContexts = [...customContexts, newContext];
+       setCustomContexts(updatedContexts);
+       // Save to settings
+       try {
+         await saveSettings({ customContexts: updatedContexts });
+       } catch (error) {
+         console.error('Failed to save custom contexts to settings:', error);
+       }
+     }
+   };
+
    // If user is not authenticated, show login screen
    if (!currentUser) {
      return (
@@ -426,7 +443,7 @@
        <header>
          <div>
            <h1>
-             <span className="header-icon">🐱</span>
+             <img src="/favicon_ioTaskCat/favicon.svg" alt="TaskCat Logo" className="header-icon" />
              Task Cat
            </h1>
            {isOffline && (
@@ -438,11 +455,26 @@
          <div>
            <select
              value={currentContext}
-             onChange={(e) => setCurrentContext(e.target.value)}
+             onChange={(e) => {
+               if (e.target.value === 'AddNew') {
+                 const newContext = prompt('Enter a new context name:');
+                 if (newContext && newContext.trim()) {
+                   const trimmedContext = newContext.trim();
+                   setCurrentContext(trimmedContext);
+                   // Add to custom contexts if not already present
+                   handleContextCreated(trimmedContext);
+                 }
+               } else {
+                 setCurrentContext(e.target.value);
+               }
+             }}
              className="context-selector"
            >
-             <option value="All">All Contexts</option>
+             <option value="All">All Modes</option>
              {CONFIG.CONTEXTS.map(context => (
+               <option key={context} value={context}>{context}</option>
+             ))}
+             {customContexts.map(context => (
                <option key={context} value={context}>{context}</option>
              ))}
              <option value="AddNew">+ Add New Context</option>
@@ -461,18 +493,23 @@
 
        <main>
          <TaskList
-           tasks={pendingTasks} // ✅ Only show incomplete tasks
+           tasks={currentContext === 'All' ? (pendingTasks || []) : (pendingTasks || []).filter(task => task.context === currentContext)} // Filter by context
+            allPendingTasks={pendingTasks || []}
            onAddTask={addTask}
            onDeleteTask={deleteTask}
            onCompleteTask={completeTask}
            onUpdateTask={handleTaskUpdate}
            overdueTasks={overdueTasks}
            dueTodayTasks={dueTodayTasks}
-           onSetEditTask={taskToEdit}
+           taskToEdit={taskToEdit}
+           onContextCreated={handleContextCreated}
+           customContexts={customContexts}
+           showTasks={showTasks}
+           onShowTasksChange={setShowTasks}
          />
 
         <TaskSwipe
-          tasks={tasks.filter(task => !task.completed)}
+          tasks={(tasks || []).filter(task => !task.completed)}
           onSwipeLeft={(id) => console.log('Viewed previous task:', id)}
           onSwipeRight={completeTask}
         />
@@ -495,11 +532,11 @@
 
            <div className="tab-content">
              {activeTab === 'trophies' ? (
-               <TrophyBoard trophies={trophies} newTrophy={newTrophy} />
+               <TrophyBoard trophies={trophies || []} newTrophy={newTrophy} />
              ) : (
                <DateHistoryView
-                 tasks={tasks}
-                 trophies={trophies}
+                 tasks={tasks || []}
+                 trophies={trophies || []}
                  groupedTrophiesByDate={groupedTrophiesByDate}
                  groupedTasksByDate={groupedTasksByDate}
                  allDates={allDates}
@@ -510,13 +547,31 @@
        </main>
 
        <TaskSearch
-         tasks={tasks}
-         pendingTasks={pendingTasks}
+         tasks={tasks || []}
+         pendingTasks={pendingTasks || []}
          onEditTask={(task) => {
-           // Scroll to task list and set the task for editing
-           document.getElementById('task-list').scrollIntoView({ behavior: 'smooth' });
-           // Set the task for editing in TaskList
-           setTaskToEdit(task);
+           // If task has updated properties, save them
+           if (task.text !== undefined) {
+             handleTaskUpdate(task.id, {
+               text: task.text,
+               category: task.category,
+               context: task.context,
+               dueDate: task.dueDate,
+               priority: task.priority
+             });
+           } else {
+             // Show the task list and set the task for editing
+             setShowTasks(true);
+             // Set the task for editing in TaskList
+             setTaskToEdit(task);
+             // Scroll to task list after a short delay to ensure it's visible
+             setTimeout(() => {
+               const taskListElement = document.getElementById('task-list');
+               if (taskListElement) {
+                 taskListElement.scrollIntoView({ behavior: 'smooth' });
+               }
+             }, 100);
+           }
          }}
        />
 

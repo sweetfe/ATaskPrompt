@@ -59,7 +59,7 @@ Optimized for mobile devices while maintaining functionality on larger screens.
 | 📚 Task description text goes here  |
 | and can wrap to multiple lines      |
 |                                     |
-| Location: Grocery Store             |
+|              |
 |                                     |
 | [← Previous] [Complete] [Next →]    |
 +-------------------------------------+
@@ -68,7 +68,7 @@ Optimized for mobile devices while maintaining functionality on larger screens.
 **Elements**:
 - Category tag with color coding
 - Task description text
-- Location information (if specified)
+
 - Icon (if specified)
 - Navigation buttons (Previous Task, Next Task, Complete)
 - Menu button for additional options
@@ -234,7 +234,7 @@ graph TD
 |                                     |
 | +---------------------------------+ |
 | | [Health] 📚 Drink water       ✓ | |
-| | Location: Grocery Store         | |
+| |          | |
 | | [Complete] [Skip] [Delay]       | |
 | +---------------------------------+ |
 |                                     |
@@ -261,7 +261,7 @@ graph TD
 | [+ Add Task]                        |
 | Category: [Health ▼]                |
 | Icon: [📚 book ▼]                   |
-| Location: [Detect Current]          |
+
 | Name: [___________________________] |
 +-------------------------------------+
 | [🏠 Home] [📊 History] [🏆 Trophies] |
@@ -278,7 +278,7 @@ graph TD
 |                                     |
 |   📚 "Take a 5-minute walk outside" |
 |                                     |
-|   Location: Park (0.5 miles away)   |
+|      |
 |                                     |
 |      [Sounds Fun!]  [Not Now]       |
 |                                     |
@@ -349,10 +349,7 @@ graph TD
 | Categories                          |
 | [Health] [Work] [Personal] [Home] [Cleaning] [+] |
 |                                     |
-| Location Settings                   |
-| [✓ Enable Location-Based Tasks]     |
-| Location Update Frequency:          |
-| [Every 5 minutes ▼]                 |
+
 |                                     |
 | Rewards                             |
 | [✓ Confetti] [✓ Sounds]             |

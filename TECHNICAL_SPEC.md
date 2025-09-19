@@ -17,7 +17,7 @@ ATaskPrompt is an ADHD/AU-friendly task management application that uses positiv
 - **Gestures**: react-swipeable
 - **Icons**: react-icons
 - **Audio**: HTML5 Audio API
-- **Geolocation**: Browser Geolocation API
+
 - **Build Tool**: Vite
 - **Testing**: Jest, React Testing Library
 - **Deployment**: Netlify/Vercel (PWA)
@@ -196,11 +196,7 @@ main.js                // Entry point
   prompted: boolean,    // Whether the task has been shown in a prompt
   promptCount: number,  // How many times the task has been prompted
   completionCount: number, // How many times the task has been completed
-  locationName: string | null, // Location name where task should be performed
-  locationCoords: {    // Location coordinates where task should be performed
-    latitude: number,
-    longitude: number
-  } | null,
+  
   icon: string | null   // Icon identifier for display
 }
 ```
